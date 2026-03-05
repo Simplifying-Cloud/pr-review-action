@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"strings"
 )
 
 type Client struct {
@@ -58,6 +60,16 @@ func (c *Client) GetPRFiles(owner, repo string, prNum int) ([]PRFile, error) {
 }
 
 func (c *Client) SubmitReview(owner, repo string, prNum int, review *ReviewSubmission) error {
+	err := c.postReview(owner, repo, prNum, review)
+	if err != nil && review.Event == "APPROVE" && isApprovalForbidden(err) {
+		log.Printf("APPROVE not permitted by repo/org settings, falling back to COMMENT")
+		review.Event = "COMMENT"
+		return c.postReview(owner, repo, prNum, review)
+	}
+	return err
+}
+
+func (c *Client) postReview(owner, repo string, prNum int, review *ReviewSubmission) error {
 	url := fmt.Sprintf("%s/repos/%s/%s/pulls/%d/reviews", c.apiURL, owner, repo, prNum)
 	payload, err := json.Marshal(review)
 	if err != nil {
@@ -83,6 +95,12 @@ func (c *Client) SubmitReview(owner, repo string, prNum int, review *ReviewSubmi
 		return fmt.Errorf("review submission failed (%d): %s", resp.StatusCode, string(body))
 	}
 	return nil
+}
+
+func isApprovalForbidden(err error) bool {
+	msg := err.Error()
+	return strings.Contains(msg, "not permitted to approve") ||
+		strings.Contains(msg, "not allowed") && strings.Contains(msg, "approve")
 }
 
 func (c *Client) get(url, accept string) ([]byte, error) {
