@@ -26,7 +26,7 @@ type ReviewSubmission struct {
 	CommitID string          `json:"commit_id"`
 	Body     string          `json:"body"`
 	Event    string          `json:"event"` // APPROVE, REQUEST_CHANGES, COMMENT
-	Comments []ReviewComment `json:"comments"`
+	Comments []ReviewComment `json:"comments,omitempty"`
 }
 
 type ReviewComment struct {
