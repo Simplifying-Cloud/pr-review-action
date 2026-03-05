@@ -1,0 +1,42 @@
+name: 'LLM PR Review'
+description: 'Model-agnostic automated PR code review using any OpenAI-compatible LLM provider'
+
+inputs:
+  github_token:
+    description: 'GitHub token for API access'
+    required: false
+    default: ${{ github.token }}
+  llm_base_url:
+    description: 'OpenAI-compatible API base URL (e.g. https://openrouter.ai/api/v1/)'
+    required: true
+  llm_api_key:
+    description: 'API key for the LLM provider'
+    required: false
+    default: ''
+  llm_model:
+    description: 'Model name (e.g. anthropic/claude-sonnet-4-6)'
+    required: true
+  max_tokens:
+    description: 'Max response tokens'
+    required: false
+    default: '4096'
+  review_focus:
+    description: 'Custom review focus areas (one per line)'
+    required: false
+    default: ''
+  extra_prompt:
+    description: 'Additional instructions appended to the review prompt'
+    required: false
+    default: ''
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
+    LLM_BASE_URL: ${{ inputs.llm_base_url }}
+    LLM_API_KEY: ${{ inputs.llm_api_key }}
+    LLM_MODEL: ${{ inputs.llm_model }}
+    LLM_MAX_TOKENS: ${{ inputs.max_tokens }}
+    REVIEW_FOCUS: ${{ inputs.review_focus }}
+    EXTRA_PROMPT: ${{ inputs.extra_prompt }}
