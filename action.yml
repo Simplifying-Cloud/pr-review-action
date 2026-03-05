@@ -1,4 +1,4 @@
-name: 'LLM PR Review'
+name: 'Argus'
 description: 'Model-agnostic automated PR code review using any OpenAI-compatible LLM provider'
 
 inputs:

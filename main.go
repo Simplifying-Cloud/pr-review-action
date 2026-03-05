@@ -86,7 +86,7 @@ func main() {
 
 	for _, c := range output.Comments {
 		if github.IsCommentable(diffFiles, c.Path, c.Line) {
-			body := fmt.Sprintf("%s **%s**: %s", c.SeverityEmoji(), c.Severity, c.Message)
+			body := fmt.Sprintf("**Argus** %s **%s**: %s", c.SeverityEmoji(), c.Severity, c.Message)
 			validComments = append(validComments, github.ReviewComment{
 				Path: c.Path,
 				Line: c.Line,
@@ -99,7 +99,7 @@ func main() {
 	}
 
 	// 8. Build summary
-	summary := formatSummary(output, skippedComments, truncated)
+	summary := formatSummary(output, skippedComments, truncated, cfg.LLMModel)
 
 	// 9. Map verdict to GitHub review event
 	event := "COMMENT"
@@ -125,10 +125,10 @@ func main() {
 	log.Printf("Review submitted: %s with %d inline comments", event, len(validComments))
 }
 
-func formatSummary(output *review.Output, skipped []review.Comment, truncated bool) string {
+func formatSummary(output *review.Output, skipped []review.Comment, truncated bool, model string) string {
 	var sb strings.Builder
 
-	sb.WriteString("## Code Review\n\n")
+	sb.WriteString("## 👁️ Argus Review\n\n")
 	sb.WriteString(output.Summary)
 	sb.WriteString("\n")
 
@@ -144,7 +144,7 @@ func formatSummary(output *review.Output, skipped []review.Comment, truncated bo
 		}
 	}
 
-	sb.WriteString("\n---\n*Automated review by [pr-review-action](https://github.com/Simplifying-Cloud/pr-review-action)*")
+	sb.WriteString(fmt.Sprintf("\n---\n*[Argus](https://github.com/Simplifying-Cloud/pr-review-action) · model: `%s`*", model))
 
 	return sb.String()
 }
