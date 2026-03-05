@@ -99,7 +99,7 @@ func main() {
 	}
 
 	// 8. Build summary
-	summary := formatSummary(output, skippedComments, truncated, cfg.LLMModel)
+	summary := formatSummary(output, skippedComments, truncated, cfg.LLMModel, cfg.ReviewFocus, len(files), len(diff))
 
 	// 9. Map verdict to GitHub review event
 	event := "COMMENT"
@@ -125,10 +125,20 @@ func main() {
 	log.Printf("Review submitted: %s with %d inline comments", event, len(validComments))
 }
 
-func formatSummary(output *review.Output, skipped []review.Comment, truncated bool, model string) string {
+func formatSummary(output *review.Output, skipped []review.Comment, truncated bool, model, reviewFocus string, fileCount, diffSize int) string {
 	var sb strings.Builder
 
 	sb.WriteString("## 👁️ Argus Review\n\n")
+
+	switch output.Verdict {
+	case "approve":
+		sb.WriteString("✅ **Approved** — all clear.\n\n")
+	case "request_changes":
+		sb.WriteString("🔴 **Changes Requested**\n\n")
+	default:
+		sb.WriteString("💬 **Comments**\n\n")
+	}
+
 	sb.WriteString(output.Summary)
 	sb.WriteString("\n")
 
@@ -144,7 +154,50 @@ func formatSummary(output *review.Output, skipped []review.Comment, truncated bo
 		}
 	}
 
-	sb.WriteString(fmt.Sprintf("\n---\n*[Argus](https://github.com/Simplifying-Cloud/pr-review-action) · model: `%s`*", model))
+	// Stats table
+	diffLabel := formatBytes(diffSize)
+	focus := "Default"
+	if reviewFocus != "" {
+		focus = summarizeFocus(reviewFocus)
+	}
+
+	sb.WriteString("\n| Reviewed | Detail |\n")
+	sb.WriteString("|----------|--------|\n")
+	sb.WriteString(fmt.Sprintf("| Files    | %d     |\n", fileCount))
+	sb.WriteString(fmt.Sprintf("| Diff     | %s  |\n", diffLabel))
+	sb.WriteString(fmt.Sprintf("| Model    | %s |\n", model))
+	sb.WriteString(fmt.Sprintf("| Focus    | %s |\n", focus))
+
+	sb.WriteString(fmt.Sprintf("\n---\n*[Argus](https://github.com/Simplifying-Cloud/pr-review-action) · automated review*"))
 
 	return sb.String()
+}
+
+func formatBytes(n int) string {
+	switch {
+	case n >= 1_000_000:
+		return fmt.Sprintf("%.1f MB", float64(n)/1_000_000)
+	case n >= 1_000:
+		return fmt.Sprintf("%.1f KB", float64(n)/1_000)
+	default:
+		return fmt.Sprintf("%d B", n)
+	}
+}
+
+func summarizeFocus(focus string) string {
+	var areas []string
+	for _, line := range strings.Split(focus, "\n") {
+		line = strings.TrimSpace(line)
+		line = strings.TrimPrefix(line, "- ")
+		if idx := strings.Index(line, ":"); idx > 0 {
+			line = line[:idx]
+		}
+		if line != "" {
+			areas = append(areas, line)
+		}
+	}
+	if len(areas) == 0 {
+		return "Default"
+	}
+	return strings.Join(areas, ", ")
 }

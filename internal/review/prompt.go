@@ -35,6 +35,7 @@ Rules:
 - Set verdict to "request_changes" if there are critical issues
 - Set verdict to "comment" otherwise
 - If there are no issues at all, return an empty comments array with verdict "approve"
+- For approvals, write a brief summary of what the PR does and why it looks good (1-2 sentences)
 - Output ONLY the JSON object, no other text`
 
 func BuildPrompt(pr *github.PullRequest, diff string, files []github.PRFile, reviewFocus, extraPrompt string) []llm.ChatMessage {
