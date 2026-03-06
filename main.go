@@ -63,7 +63,7 @@ func main() {
 	messages := review.BuildPrompt(pr, diff, files, cfg.ReviewFocus, cfg.ExtraPrompt)
 
 	// 5. Call LLM
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Minute)
 	defer cancel()
 
 	log.Println("Calling LLM for review...")
