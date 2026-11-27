@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -109,6 +110,9 @@ func main() {
 	case "request_changes":
 		event = "REQUEST_CHANGES"
 	}
+	if truncated && event == "APPROVE" {
+		event = "COMMENT" // never approve a diff Argus did not fully see
+	}
 
 	// 10. Submit review
 	submission := &github.ReviewSubmission{
@@ -123,6 +127,13 @@ func main() {
 	}
 
 	log.Printf("Review submitted: %s with %d inline comments", event, len(validComments))
+
+	// 11. Fail the check when the review does not clear the PR. Merge gates read
+	// the check result, not the review state.
+	if err := review.Gate(output.Verdict, truncated); err != nil {
+		log.Printf("::error::%v", err)
+		os.Exit(1)
+	}
 }
 
 func formatSummary(output *review.Output, skipped []review.Comment, truncated bool, model, reviewFocus string, fileCount, diffSize int) string {

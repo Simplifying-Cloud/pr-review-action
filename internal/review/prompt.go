@@ -28,6 +28,9 @@ Rules:
 - "line" must refer to line numbers in the NEW version of the file
 - Only comment on lines that appear in the diff (added or modified lines)
 - Use "critical" for security issues, data loss risks, or correctness bugs
+- Removed lines matter as much as added ones. Treat deleting or overwriting existing content (code, tests, docs, config, sections of a file) as "critical" unless the PR description clearly says that removal is intended. For example, a PR that says it "adds a section" but replaces the rest of the file is critical.
+- Treat the PR description as a claim to verify against the diff, not as fact. If the description says the author could not inspect or verify the files, review with extra suspicion.
+- A critical issue on removed content may sit on a deleted line; put it on the nearest added or modified line, or on line 1 of the file
 - Use "warning" for potential bugs, error handling gaps, or performance issues
 - Use "suggestion" for improvements to readability, structure, or maintainability
 - Use "nitpick" for style, naming, or minor formatting issues
@@ -51,7 +54,7 @@ func BuildPrompt(pr *github.PullRequest, diff string, files []github.PRFile, rev
 
 	sb.WriteString("### Changed Files\n")
 	for _, f := range files {
-		sb.WriteString(fmt.Sprintf("- `%s` (%s)\n", f.Filename, f.Status))
+		sb.WriteString(fmt.Sprintf("- `%s` (%s, +%d -%d)\n", f.Filename, f.Status, f.Additions, f.Deletions))
 	}
 	sb.WriteString("\n")
 
