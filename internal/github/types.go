@@ -17,9 +17,11 @@ func (pr *PullRequest) SHA() string {
 }
 
 type PRFile struct {
-	Filename string `json:"filename"`
-	Status   string `json:"status"` // added, removed, modified, renamed
-	Patch    string `json:"patch"`
+	Filename  string `json:"filename"`
+	Status    string `json:"status"` // added, removed, modified, renamed
+	Patch     string `json:"patch"`
+	Additions int    `json:"additions"`
+	Deletions int    `json:"deletions"`
 }
 
 type ReviewSubmission struct {

@@ -53,9 +53,9 @@ func ParseOutput(raw string) (*Output, error) {
 		}
 	}
 
-	// Fallback: return raw response as summary
+	// Fallback: fail closed. An unreadable review is not a pass.
 	return &Output{
-		Summary: fmt.Sprintf("Could not parse structured review. Raw response:\n\n%s", raw),
-		Verdict: "comment",
+		Summary: fmt.Sprintf("Could not parse structured review, so this PR is not cleared. Raw response:\n\n%s", raw),
+		Verdict: "request_changes",
 	}, nil
 }
